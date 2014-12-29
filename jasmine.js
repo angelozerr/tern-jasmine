@@ -8,15 +8,60 @@
 })(function(infer, tern) {
   "use strict";
 
+  infer.registerFunction("jasmineExpect", function(_self, args, argNodes) {
+    var cx = infer.cx(), data = cx.parent._jasmine;
+    return data.matchers;
+  });
+  
   tern.registerPlugin("jasmine", function(server, options) {
-
+    server._jasmine = {
+      matchers: null
+    };
+	  
     return {
-      defs : defs
+      defs : defs,
+      passes: {
+          postLoadDef: postLoadDef
+        }
     };
   });
   
+  function postLoadDef(data) {
+   var cx = infer.cx(), interfaces = cx.definitions[data["!name"]]["!jasmine"];
+   var data = cx.parent._jasmine;   
+   if (interfaces) {
+	 if (!data.matchers) data.matchers = new infer.Obj();
+     var from = interfaces;  
+	  from.forAllProps(function(prop, val, local) {
+	    if (local && prop != "<i>")
+	  	 data.matchers.propagate(new infer.PropHasSubset(prop, val));
+	  });	
+   }
+  }
+  
+  function copyModule(module, Y) {
+	    var type = module.getType();
+	    var yuiType = type.hasProp('A');
+	    var from  = yuiType ? yuiType : type;  
+	    from.forAllProps(function(prop, val, local) {
+	      if (local && prop != "<i>")
+	        Y.propagate(new infer.PropHasSubset(prop, val));
+	    });	
+	  }  
+  
+  
   var defs = {
-    "!name": "jasmine",	
+    "!name": "jasmine",
+    "!define": {
+      "!jasmine": {
+        "toBe": {
+          "!type": "fn()"	
+        },
+        "toBeCloseTo": {
+          "!type": "fn()"	        
+        }
+      }
+    },
     "describe": {
       "!type": "fn(description: string, specDefinitions: fn())",
       "!doc": "A test suite begins with a call to the global Jasmine function describe with two parameters: a string and a function. The string is a name or title for a spec suite - usually what is being tested. The function is a block of code that implements the suite."
@@ -26,7 +71,7 @@
       "!doc": "Specs are defined by calling the global Jasmine function it, which, like describe takes a string and a function. The string is the title of the spec and the function is the spec, or test. A spec contains one or more expectations that test the state of the code. An expectation in Jasmine is an assertion that is either true or false. A spec with all true expectations is a passing spec. A spec with one or more false expectations is a failing spec."
     },
     "expect": {
-      "!type": "fn()",
+      "!type": "fn(value: ?) -> !custom:jasmineExpect",
       "!doc": "Expectations are built with the function expect which takes a value, called the actual. It is chained with a Matcher function, which takes the expected value."
     }
   }
