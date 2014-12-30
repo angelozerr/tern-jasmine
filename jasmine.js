@@ -38,18 +38,26 @@
 	  });	
    }
   }
-  
-  function copyModule(module, Y) {
-	    var type = module.getType();
-	    var yuiType = type.hasProp('A');
-	    var from  = yuiType ? yuiType : type;  
-	    from.forAllProps(function(prop, val, local) {
-	      if (local && prop != "<i>")
-	        Y.propagate(new infer.PropHasSubset(prop, val));
-	    });	
-	  }  
-  
-  
+ 
+  /*
+   * https://www.safaribooksonline.com/library/view/javascript-testing-with/9781449356729/ch04.html
+   * toBeDefined',
+        'toBeFalsy',
+        'toBeGreaterThan',
+        'toBeLessThan',
+        'toBeNaN',
+        'toBeNull',
+        'toBeTruthy',
+        'toBeUndefined',
+        'toContain',
+        'toEqual',
+        'toHaveBeenCalled',
+        'toHaveBeenCalledWith',
+        'toMatch',
+        'toThrow',
+        'toThrowError'
+        */
+   
   var defs = {
     "!name": "jasmine",
     "!define": {
@@ -58,8 +66,11 @@
           "!type": "fn()"	
         },
         "toBeCloseTo": {
-          "!type": "fn()"	        
+          "!type": "fn(expected: number, precision: number)",
+          "!doc": "toBeCloseTo allows you to check if a number is close to another number, given a certain amount of decimal precision as the second argument."
         }
+        
+        
       }
     },
     "describe": {
